@@ -15,6 +15,7 @@ class PersonAndOrganization(models.Model):
     email = models.EmailField(verbose_name='Email', blank=True)
     website = models.URLField(verbose_name='Website', blank=True)
     map_reference = models.ForeignKey(MapReference, on_delete=models.CASCADE, verbose_name='publisher', blank=True, null=True)
+    route_risk_advisor = models.ForeignKey(MapReference, on_delete=models.CASCADE, verbose_name='is maintained by', blank=True, null=True)
 
 class Provenance(models.Model):
     publisher = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE)
@@ -166,3 +167,35 @@ class RouteGuideSegment(models.Model):
     distance = models.ForeignKey(Distance, on_delete=models.CASCADE, null=True)
     category = models.ManyToManyField(Category)
     additional_info = models.ManyToManyField(Article)
+
+class RouteRiskAdvisory(models.Model):
+    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True)
+    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, blank=True, null=True)
+    risk_description = models.CharField(max_length=250)
+    user_safety_feedback = char = models.CharField(max_length=500) # TODO: expand into schema:Review object
+    is_maintained = models.BooleanField()
+    risk_information_url = models.URLField()
+    traffic_description = models.CharField(max_length=500)
+
+class KnownRisk(models.Model):
+    rra = models.ForeignKey(RouteRiskAdvisory, on_delete=models.CASCADE)
+    description = models.CharField(max_length=100)
+
+class RiskModifier(models.Model):
+    rra = models.ForeignKey(RouteRiskAdvisory, on_delete=models.CASCADE)
+    description = models.CharField(max_length=100)
+
+class RouteAccessRestriction(models.Model):
+    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True)
+    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, blank=True, null=True)
+    description = models.CharField(max_length=250)
+    route_access_restriction_information_url = models.URLField()
+    route_access_restriction_timespan = models.CharField(max_length=50)
+
+class RouteAccessRestrictionTerm(models.Model):
+    rar = models.ForeignKey(RouteAccessRestriction, on_delete=models.CASCADE)
+    route_access_description = models.CharField(max_length=250)
+
+class RiskMitigator(models.Model):
+    rra = models.ForeignKey(RouteRiskAdvisory, on_delete=models.CASCADE)
+    description = models.CharField(max_length=100)
