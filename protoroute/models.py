@@ -28,7 +28,7 @@ class TransportNote(models.Model):
     routepoint = models.ForeignKey('RoutePoint', on_delete=models.CASCADE, blank=True, null=True, related_name='rp_transport_note')
 
 class MapReference(models.Model):
-    map_series = models.CharField(max_length=10)
+    map_series = models.CharField(max_length=50)
     map_number = models.CharField(max_length=10)
     grid_reference = models.CharField(max_length=10)
     publisher = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE, verbose_name='publisher', related_name='publisher', blank=True, null=True)
@@ -44,6 +44,12 @@ class Provenance(models.Model):
 
 class Category(models.Model):
     content = models.CharField(max_length=30)
+
+class Surface(models.Model):
+    surface = models.CharField(max_length=30)
+
+class SuggestedEquipment(models.Model):
+    item = models.CharField(max_length=100)
 
 class Article(models.Model):
     # TODO: expand representation of Articles
@@ -74,12 +80,6 @@ class VerificationRecord(models.Model):
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True, related_name='rg_verification_record')
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, blank=True, null=True, related_name='seg_verification_record')
 
-class Distance(models.Model):
-    value = models.FloatField()
-    unit = models.CharField(max_length=6, verbose_name='Unit', default="km")
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_distance')
-    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_distance')
-
 class AccessibilityDescription(models.Model):
     description = models.CharField(max_length=250)
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True, related_name='rg_access_description')
@@ -91,6 +91,7 @@ class Activity(models.Model):
 
 class IndicativeDuration(models.Model):
     duration = models.CharField(max_length=10, verbose_name='Duration (8601)') # TODO: Add regex for validation
+    activity = models.ForeignKey('Activity', on_delete=models.CASCADE, verbose_name='Activity', null=True)
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True,related_name='rg_duration')
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_duration')
 
@@ -102,7 +103,7 @@ class GeoCoordinates(models.Model):
     latitude = models.FloatField(verbose_name='Latitude')
     longitude = models.FloatField(verbose_name='Longitude')
     postal_code = models.CharField(max_length=10, verbose_name='Post Code', null=True, blank=True)
-    routepoint = models.ForeignKey('RoutePoint', on_delete=models.CASCADE, blank=True, null=True, related_name='rp_geo')
+    routepoint = models.OneToOneField('RoutePoint', on_delete=models.CASCADE, blank=True, null=True, related_name='rp_geo')
 
 class RoutePoint(models.Model):
     name = models.CharField(max_length=100, verbose_name='Name')
@@ -111,35 +112,19 @@ class RoutePoint(models.Model):
     description = models.TextField(blank=True, verbose_name='Description')
     headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
     same_as = models.URLField(verbose_name='Same As', blank=True, null=True)
-
-class StartPoint(models.Model):
-    # note that the models for StartPoint, EndPoint, and RoutePoint are all identical
-    # it's useful to separate them out for clarity on the frontend
-    name = models.CharField(max_length=100, verbose_name='Name')
-    is_access_point = models.BooleanField()
-    is_preferred_access_point = models.BooleanField(verbose_name='Is Preferred Access Point')
-    description = models.TextField(blank=True, verbose_name='Description')
-    headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
-    same_as = models.URLField(verbose_name='Same As', blank=True, null=True)
-
-class EndPoint(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Name')
-    is_access_point = models.BooleanField()
-    is_preferred_access_point = models.BooleanField(verbose_name='Is Preferred Access Point')
-    description = models.TextField(blank=True, verbose_name='Description')
-    headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
-    same_as = models.URLField(verbose_name='Same As', blank=True, null=True)
+    is_start_point = models.BooleanField(verbose_name='Is Start Point', default=False)
+    is_end_point = models.BooleanField(verbose_name='Is End Point', default=False)
 
 class RouteGradient(models.Model):
-    max_gradient = models.CharField(max_length=10, default='0%')
-    avg_gradient = models.CharField(max_length=10, default='0%')
-    total_elevation_gain = models.ForeignKey(Distance, on_delete=models.CASCADE, related_name='total_elevation_gain')
-    total_elevation_loss = models.ForeignKey(Distance, on_delete=models.CASCADE, related_name='total_elevation_loss')
+    max_gradient = models.CharField(max_length=10)
+    avg_gradient = models.CharField(max_length=10)
+    total_elevation_gain = models.CharField(max_length=9, verbose_name='Total Elevation Loss')
+    total_elevation_loss = models.CharField(max_length=9, verbose_name='Total Elevation Loss')
     gradient_term = models.CharField(max_length=100, verbose_name='Gradient Term')
     gradient_defurl = models.URLField(verbose_name='Gradient Definition URL')
     description = models.CharField(max_length=250)
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True,related_name='rg_gradient')
-    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_gradient')
+    route_guide = models.OneToOneField('RouteGuide', on_delete=models.CASCADE, null=True, blank=True,related_name='rg_gradient')
+    route_guide_segment = models.OneToOneField('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_gradient')
 
 class RouteDifficulty(models.Model):
     difficulty_term = models.CharField(max_length=15)
@@ -149,19 +134,29 @@ class RouteDifficulty(models.Model):
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_difficulty')
 
 class RouteLegalAdvisory(models.Model):
-    route_designation = models.ForeignKey('RouteDesignation', on_delete=models.CASCADE, verbose_name='Route Designation')
+    route_designation = models.OneToOneField('RouteDesignation', on_delete=models.CASCADE, verbose_name='Route Designation')
     description = models.CharField(max_length=250)
     legal_defurl = models.URLField(verbose_name='Legal Definition URL')
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_legal_advisory')
-    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_legal_advisory')
+    route_guide = models.OneToOneField('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_legal_advisory')
+    route_guide_segment = models.OneToOneField('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_legal_advisory')
 
 class RouteDesignation(models.Model):
-    # TODO: give dropdown suggestions for route designations in front end
-    prefLabel = models.CharField(max_length=100, verbose_name='Route Designation Term')
+    term = models.ManyToManyField('RouteDesignationTerm', verbose_name='Route Designation Term', related_name='terms')
     description = models.CharField(max_length=250)
     url = models.URLField(verbose_name='Formal Definition URL')
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_route_designation')
-    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_route_designation')
+    legal_advisory = models.ForeignKey('RouteLegalAdvisory', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_route_designation')
+
+class RouteDesignationTerm(models.Model):
+    term = models.CharField(max_length=100)
+
+class Image(models.Model):
+    caption = models.CharField(max_length=250, verbose_name='Caption')
+    url = models.URLField(verbose_name='Image URL')
+    encoding_format = models.CharField(max_length=40, verbose_name='Encoding Format')
+    size = models.CharField(max_length=20, verbose_name='Size')
+    width = models.IntegerField(verbose_name='Width')
+    height = models.IntegerField(verbose_name='Height')
+    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='image')
 
 class RouteSegmentGroup(models.Model):
     id_as_url = models.URLField(verbose_name='@id', blank=False)
@@ -175,6 +170,7 @@ class UserGeneratedContent(models.Model):
     accountable_person = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE)
     spatial_coverage = models.CharField(max_length=500)
     associated_media = models.CharField(max_length=500)
+    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='user_generated_content')
 
 class RouteGuide(models.Model):
     id = models.AutoField(primary_key=True)
@@ -184,13 +180,16 @@ class RouteGuide(models.Model):
     date_modified = models.DateField(blank=True, auto_now=False, auto_now_add=False, verbose_name='Date Modified')
     description = models.TextField(blank=True, verbose_name='Description')
     headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
+    distance = models.CharField(max_length=9, verbose_name='Distance')
     is_loop = models.BooleanField(verbose_name='Is Loop', default=True)
     id_as_url = models.URLField(verbose_name='ID (URL)')
     author = models.ManyToManyField(PersonAndOrganization, verbose_name='Author')
     activity = models.ManyToManyField(Activity)
-    start_point = models.ManyToManyField('StartPoint', blank=True)
-    end_point = models.ManyToManyField('EndPoint', blank=True)
-    point_of_interest = models.ManyToManyField('RoutePoint', blank=True)
+    categories = models.ManyToManyField('Category', verbose_name='Category', related_name="categories")
+    surfaces = models.ManyToManyField('Surface', verbose_name='Surface', related_name="surfaces")
+    suggested_equipment = models.ManyToManyField('SuggestedEquipment', verbose_name='Equipment', related_name="equipment")
+    additional_info = models.ManyToManyField('Article', verbose_name='Additional Info', blank=True, related_name="additional_info")
+    route_point = models.ManyToManyField('RoutePoint', blank=True)
 
 class RouteGuideSegment(models.Model):
     # TODO: check blank values permitted align with specification
@@ -207,10 +206,8 @@ class RouteGuideSegment(models.Model):
     id_as_url = models.URLField(verbose_name='ID (URL)')
     sequence = models.IntegerField(verbose_name='Segment Number')
     activity = models.ManyToManyField(Activity)
-    additional_info = models.ManyToManyField(Article)
-    route_guide = models.ForeignKey('RoutePoint', on_delete=models.CASCADE, blank=True, null=True, related_name='seg_route_guide')
-    start_point = models.ManyToManyField('StartPoint', blank=True)
-    end_point = models.ManyToManyField('EndPoint', blank=True)
+    additional_info = models.ManyToManyField('Article', verbose_name='Additional Info', blank=True, related_name="seg_additional_info")
+    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True, related_name='seg_route_guide')
     point_of_interest = models.ManyToManyField('RoutePoint', blank=True)
 
 class RouteRiskAdvisory(models.Model):
@@ -223,7 +220,7 @@ class RouteRiskAdvisory(models.Model):
     known_risk = models.ForeignKey('KnownRisk', on_delete=models.CASCADE, blank=True, null=True)
     risk_modifier = models.ForeignKey('RiskModifier', on_delete=models.CASCADE, blank=True, null=True)
     risk_mitigator = models.ForeignKey('RiskMitigator', on_delete=models.CASCADE, blank=True, null=True)
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_risk_advisory')
+    route_guide = models.OneToOneField('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_risk_advisory')
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_risk_advisory')
 
 class KnownRisk(models.Model):
@@ -234,14 +231,14 @@ class RiskModifier(models.Model):
 
 class RouteAccessRestriction(models.Model):
     description = models.CharField(max_length=250)
-    route_access_restriction_term = models.ForeignKey('RouteAccessRestrictionTerm', on_delete=models.CASCADE, null=True, blank=True)
-    route_access_restriction_information_url = models.URLField()
-    route_access_restriction_timespan = models.CharField(max_length=50)
+    terms = models.ManyToManyField('RouteAccessRestrictionTerm', blank=True)
+    information_url = models.URLField()
+    timespan = models.CharField(max_length=50)
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_access_restriction')
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_access_restriction')
 
 class RouteAccessRestrictionTerm(models.Model):
-    route_access_description = models.CharField(max_length=250)
+    description = models.CharField(max_length=250)
 
 class RiskMitigator(models.Model):
     description = models.CharField(max_length=100)

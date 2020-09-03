@@ -55,10 +55,6 @@ class VerificationRecordViewSet(viewsets.ModelViewSet):
     queryset = VerificationRecord.objects.all().order_by('date_verified')
     serializer_class = VerificationRecordSerializer
 
-class DistanceViewSet(viewsets.ModelViewSet):
-    queryset = Distance.objects.all().order_by('id')
-    serializer_class = DistanceSerializer
-
 class ProvenanceViewSet(viewsets.ModelViewSet):
     queryset = Provenance.objects.all().order_by('id')
     serializer_class = ProvenanceSerializer
@@ -94,6 +90,10 @@ class RouteGradientViewSet(viewsets.ModelViewSet):
 class RouteDifficultyViewSet(viewsets.ModelViewSet):
     queryset = RouteDifficulty.objects.all().order_by('id')
     serializer_class = RouteDifficultySerializer
+
+class ImageViewSet(viewsets.ModelViewSet):
+    queryset = Image.objects.all().order_by('id')
+    serializer_class = ImageSerializer
 
 class RouteLegalAdvisoryViewSet(viewsets.ModelViewSet):
     queryset = RouteLegalAdvisory.objects.all().order_by('id')

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from .models import *
 
@@ -32,108 +33,125 @@ class RoutePointAsLinkSerializer(serializers.HyperlinkedModelSerializer):
 class ProvenanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Provenance
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 1
 
 class PersonAndOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonAndOrganization
-        fields = ("__all__")
+        exclude = ['id']
 
 class TransportNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransportNote
-        fields = ("__all__")
+        exclude = ['id', 'routepoint']
 
-class MapReferenceSerializer(serializers.ModelSerializer):
+class MapReferenceSerializer(WritableNestedModelSerializer):
     map_series = serializers.CharField(max_length=10)
     map_number = serializers.CharField(max_length=10)
     grid_reference = serializers.CharField(max_length=10, required=False)
     publisher = PersonAndOrganizationSerializer(many=False, required=False)
-    routepoint = RoutePointAsLinkSerializer(many=True)
 
     class Meta:
         model = MapReference
-        fields = ("__all__")
+        exclude = ['routepoint']
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ("__all__")
+        exclude = ['id']
+
+class SurfaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Surface
+        exclude = ['id']
+
+class SuggestedEquipmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SuggestedEquipment
+        exclude = ['id']
 
 class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
-        fields = ("__all__")
+        exclude = ['id']
+        depth = 1
 
 class GeoPathSerializer(serializers.ModelSerializer):
     class Meta:
         model = GeoPath
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
 
 class GeoCoordinatesSerializer(serializers.ModelSerializer):
     class Meta:
         model = GeoCoordinates
-        fields = ("__all__")
+        exclude = ['id', 'routepoint']
 
 class RouteGradientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteGradient
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
 
 class MapImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapImage
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
 
 class VerificationRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = VerificationRecord
-        fields = ("__all__")
-
-class DistanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Distance
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 1
 
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("__all__")
+        exclude = ['id']
 
 class IndicativeDurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = IndicativeDuration
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 2
 
 class AmenityFeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = AmenityFeature
-        fields = ("__all__")
+        exclude = ['id', 'routepoint']
 
 class RouteDifficultySerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteDifficulty
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
 
-class GeoCoordinates(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GeoCoordinates
-        fields = ("__all__")
+        model = Image
+        exclude = ['id', 'route_guide']
 
 class RouteLegalAdvisorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteLegalAdvisory
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 2
+
+class RouteDesignationTermSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RouteDesignationTerm
+        fields = ['term']
 
 class RouteDesignationSerializer(serializers.ModelSerializer):
+    term = RouteDesignationTermSerializer(many=True, required=False)
     class Meta:
         model = RouteDesignation
-        fields = ("__all__")
+        fields = ['description', 'url', 'term']
+        depth = 1
 
 class UserGeneratedContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserGeneratedContent
-        fields = ("__all__")
+        exclude = ['id', 'route_guide']
+        depth = 1
 
 class KnownRiskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -148,12 +166,13 @@ class RiskModifierSerializer(serializers.ModelSerializer):
 class RouteAccessRestrictionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteAccessRestriction
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 1
 
 class RouteAccessRestrictionTermSerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteAccessRestrictionTerm
-        fields = ("__all__")
+        exclude = ['id']
 
 class RiskMitigatorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -163,7 +182,8 @@ class RiskMitigatorSerializer(serializers.ModelSerializer):
 class RouteRiskAdvisorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteRiskAdvisory
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
+        depth = 1
 
 class RouteSegmentGroupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -173,9 +193,9 @@ class RouteSegmentGroupSerializer(serializers.ModelSerializer):
 class AccessibilityDescriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccessibilityDescription
-        fields = ("__all__")
+        exclude = ['id', 'route_guide', 'route_guide_segment']
 
-class RoutePointSerializer(serializers.ModelSerializer):
+class RoutePointSerializer(WritableNestedModelSerializer):
     name = serializers.CharField(required=True)
     is_access_point = serializers.BooleanField(default=True)
     is_preferred_access_point = serializers.BooleanField(default=False)
@@ -183,14 +203,15 @@ class RoutePointSerializer(serializers.ModelSerializer):
     headline = serializers.CharField(max_length=200, required=False)
     same_as = serializers.URLField(required=False)
     rp_mapref = MapReferenceSerializer(many=True, required=False)
-    rp_geo = GeoCoordinatesSerializer(many=True, required=False)
+    rp_geo = GeoCoordinatesSerializer(required=False)
     rp_transport_note = TransportNoteSerializer(many=True, required=False)
+    rp_amenity = AmenityFeatureSerializer(many=True, required=False)
 
     class Meta:
         model = RoutePoint
         exclude = ("id",)
 
-class RouteGuideSerializer(serializers.ModelSerializer):
+class RouteGuideSerializer(WritableNestedModelSerializer):
     name = serializers.CharField(max_length=200, required=False)
     url = serializers.URLField(required=False)
     date_published = serializers.DateField(required=False)
@@ -202,29 +223,29 @@ class RouteGuideSerializer(serializers.ModelSerializer):
     author = PersonAndOrganizationSerializer(many=True, required=False)
     rg_provenance = ProvenanceSerializer(many=True, required=False)
     rg_verification_record = VerificationRecordSerializer(many=True, required=False)
-    start_point = RoutePointSerializer(many=False, required=False)
-    end_point = RoutePointSerializer(many=False, required=False)
-    point_of_interest = RoutePointSerializer(many=True, required=False)
-    start_point = RoutePointSerializer(many=True, required=False)
-    end_point = RoutePointSerializer(many=True, required=False)
+    route_point = RoutePointSerializer(many=True, required=False)
     activity = ActivitySerializer(many=True, required=False)
     rg_geopath = GeoPathSerializer(many=True, required=False)
     rg_mapimage = MapImageSerializer(many=True, required=False)
-    rg_distance = DistanceSerializer(many=True, required=False)
     rg_access_description = AccessibilityDescriptionSerializer(many=True, required=False)
-    rg_gradient = RouteGradientSerializer(many=True, required=False)
+    rg_gradient = RouteGradientSerializer(required=False)
     rg_difficulty = RouteDifficultySerializer(many=True, required=False)
-    rg_risk_advisory = RouteRiskAdvisorySerializer(many=True, required=False)
-    rg_legal_advisory = RouteLegalAdvisorySerializer(many=True, required=False)
+    rg_risk_advisory = RouteRiskAdvisorySerializer(required=False)
+    rg_legal_advisory = RouteLegalAdvisorySerializer(required=False)
     rg_route_designation = RouteDesignationSerializer(many=True, required=False)
     rg_access_restriction = RouteAccessRestrictionSerializer(many=True, required=False)
     rg_duration = IndicativeDurationSerializer(many=True, required=False)
+    additional_info = ArticleSerializer(many=True, required=False)
+    surfaces = SurfaceSerializer(many=True, required=False)
+    image = ImageSerializer(many=True, required=False)
+    suggested_equipment = SuggestedEquipmentSerializer(many=True, required=False)
+    categories = CategorySerializer(many=True, required=False)
+    user_generated_content = UserGeneratedContentSerializer(many=True, required=False)
     seg_route_guide = RouteGuideSegmentAsLinkSerializer(many=True, required=False)
 
     class Meta:
         model = RouteGuide
         exclude = ("id",)
-        #fields = ("__all__")
 
 class RouteGuideSegmentSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=200, required=False)
@@ -233,24 +254,23 @@ class RouteGuideSegmentSerializer(serializers.ModelSerializer):
     date_modified = serializers.DateField(required=False)
     description = serializers.CharField(required=False)
     headline = serializers.CharField(max_length=200, required=False)
+    distance = serializers.CharField(max_length=9, required=True)
     is_loop = serializers.BooleanField(required=False)
     id_as_url = serializers.URLField(required=False)
     author = PersonAndOrganizationSerializer(many=True, required=False)
     seg_provenance = ProvenanceSerializer(many=False, required=False)
     seg_verification_record = VerificationRecordSerializer(many=True, required=False)
     point_of_interest = RoutePointSerializer(many=True, required=False)
-    start_point = RoutePointSerializer(many=True, required=False)
-    end_point = RoutePointSerializer(many=True, required=False)
     activity = ActivitySerializer(many=True, required=False)
     seg_geopath = GeoPathSerializer(many=True, required=False)
     seg_mapimage = MapImageSerializer(many=True, required=False)
-    seg_distance = DistanceSerializer(many=True, required=False)
+    seg_distance = serializers.CharField(max_length=9, required=True)
     seg_access_description = AccessibilityDescriptionSerializer(many=True, required=False)
-    seg_gradient = RouteGradientSerializer(many=True, required=False)
+    seg_gradient = RouteGradientSerializer(required=False)
     seg_difficulty = RouteDifficultySerializer(many=True, required=False)
     seg_duration = IndicativeDurationSerializer(many=True, required=False)
-    seg_risk_advisory = RouteRiskAdvisorySerializer(many=True, required=False)
-    seg_legal_advisory = RouteLegalAdvisorySerializer(many=True, required=False)
+    seg_risk_advisory = RouteRiskAdvisorySerializer(required=False)
+    seg_legal_advisory = RouteLegalAdvisorySerializer(required=False)
     seg_route_designation = RouteDesignationSerializer(many=True, required=False)
     seg_access_restriction = RouteAccessRestrictionSerializer(many=True, required=False)
     sequence = serializers.CharField(required=False)
