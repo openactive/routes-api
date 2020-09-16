@@ -245,7 +245,7 @@ class RouteGuideSerializer(WritableNestedModelSerializer):
 
     class Meta:
         model = RouteGuide
-        exclude = ("id",)
+        fields = ("__all__")
 
 class RouteGuideSegmentSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=200, required=False)

@@ -52,9 +52,10 @@ class SuggestedEquipment(models.Model):
     item = models.CharField(max_length=100)
 
 class Article(models.Model):
-    # TODO: expand representation of Articles
     headline = models.CharField(max_length=100)
     body = models.TextField()
+    author = models.OneToOneField(PersonAndOrganization, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Author')
+    image_url = models.URLField(blank=True, null=True, verbose_name='Image URL')
 
 class GeoPath(models.Model):
     map_type = models.CharField(max_length=12, choices=[("RouteMap", "RouteMap"), ("ElevationMap", "ElevationMap"), ("CustomMap", "CustomMap")])
@@ -175,19 +176,19 @@ class UserGeneratedContent(models.Model):
 class RouteGuide(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200, verbose_name='Name')
-    url = models.URLField(verbose_name='Trackback URL')
-    date_published = models.DateField(blank=True,auto_now=False, auto_now_add=False, verbose_name='Date Published')
-    date_modified = models.DateField(blank=True, auto_now=False, auto_now_add=False, verbose_name='Date Modified')
+    url = models.URLField(verbose_name='Trackback URL', blank=True)
+    date_published = models.DateField(blank=True, null=True, auto_now=False, auto_now_add=False, verbose_name='Date Published')
+    date_modified = models.DateField(blank=True, null=True, auto_now=False, auto_now_add=False, verbose_name='Date Modified')
     description = models.TextField(blank=True, verbose_name='Description')
     headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
     distance = models.CharField(max_length=9, verbose_name='Distance')
     is_loop = models.BooleanField(verbose_name='Is Loop', default=True)
     id_as_url = models.URLField(verbose_name='ID (URL)')
     author = models.ManyToManyField(PersonAndOrganization, verbose_name='Author')
-    activity = models.ManyToManyField(Activity)
-    categories = models.ManyToManyField('Category', verbose_name='Category', related_name="categories")
-    surfaces = models.ManyToManyField('Surface', verbose_name='Surface', related_name="surfaces")
-    suggested_equipment = models.ManyToManyField('SuggestedEquipment', verbose_name='Equipment', related_name="equipment")
+    activity = models.ManyToManyField(Activity, blank=True)
+    categories = models.ManyToManyField('Category', verbose_name='Category', related_name="categories", blank=True)
+    surfaces = models.ManyToManyField('Surface', verbose_name='Surface', related_name="surfaces", blank=True)
+    suggested_equipment = models.ManyToManyField('SuggestedEquipment', verbose_name='Equipment', related_name="equipment", blank=True)
     additional_info = models.ManyToManyField('Article', verbose_name='Additional Info', blank=True, related_name="additional_info")
     route_point = models.ManyToManyField('RoutePoint', blank=True)
 
@@ -197,8 +198,8 @@ class RouteGuideSegment(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200, verbose_name='Name')
     author = models.ManyToManyField(PersonAndOrganization, verbose_name='Author')
-    url = models.URLField(verbose_name='Trackback URL')
-    date_published = models.DateField(blank=True,auto_now=False, auto_now_add=False, verbose_name='Date Published')
+    url = models.URLField(verbose_name='Trackback URL', blank=True)
+    date_published = models.DateField(blank=True, auto_now=False, auto_now_add=False, verbose_name='Date Published')
     date_modified = models.DateField(blank=True, auto_now=False, auto_now_add=False, verbose_name='Date Modified')
     description = models.TextField(blank=True, verbose_name='Description')
     headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
