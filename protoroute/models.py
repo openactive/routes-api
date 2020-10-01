@@ -78,8 +78,8 @@ class MapImage(models.Model):
 class VerificationRecord(models.Model):
     verified_by = models.ManyToManyField(PersonAndOrganization, verbose_name='Verified By')
     date_verified = models.DateField(auto_now=False, auto_now_add=False, verbose_name='Date Verified')
-    route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, blank=True, null=True, related_name='rg_verification_record')
-    route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, blank=True, null=True, related_name='seg_verification_record')
+    route_guide = models.OneToOneField('RouteGuide', on_delete=models.CASCADE, blank=True, null=True, related_name='rg_verification_record')
+    route_guide_segment = models.OneToOneField('RouteGuideSegment', on_delete=models.CASCADE, blank=True, null=True, related_name='seg_verification_record')
 
 class AccessibilityDescription(models.Model):
     description = models.CharField(max_length=250)
@@ -110,8 +110,8 @@ class RoutePoint(models.Model):
     name = models.CharField(max_length=100, verbose_name='Name')
     is_access_point = models.BooleanField()
     is_preferred_access_point = models.BooleanField(verbose_name='Is Preferred Access Point')
-    description = models.TextField(blank=True, verbose_name='Description')
-    headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
+    description = models.TextField(verbose_name='Description')
+    headline = models.CharField(blank=True, null=True, max_length=200, verbose_name='Headline (Brief Description)')
     same_as = models.URLField(verbose_name='Same As', blank=True, null=True)
     is_start_point = models.BooleanField(verbose_name='Is Start Point', default=False)
     is_end_point = models.BooleanField(verbose_name='Is End Point', default=False)
@@ -131,11 +131,12 @@ class RouteDifficulty(models.Model):
     difficulty_term = models.CharField(max_length=15)
     description = models.CharField(max_length=250)
     difficulty_defurl = models.URLField(verbose_name='Difficulty Definition URL')
+    activity = models.ForeignKey('Activity', on_delete=models.CASCADE, verbose_name='Activity', null=True)
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_difficulty')
     route_guide_segment = models.ForeignKey('RouteGuideSegment', on_delete=models.CASCADE, null=True, blank=True, related_name='seg_difficulty')
 
 class RouteLegalAdvisory(models.Model):
-    route_designation = models.OneToOneField('RouteDesignation', on_delete=models.CASCADE, verbose_name='Route Designation')
+    route_designation = models.OneToOneField('RouteDesignation', on_delete=models.CASCADE, verbose_name='Route Designation', null=True, blank=True)
     description = models.CharField(max_length=250)
     legal_defurl = models.URLField(verbose_name='Legal Definition URL')
     route_guide = models.OneToOneField('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='rg_legal_advisory')
@@ -167,8 +168,8 @@ class RouteSegmentGroup(models.Model):
     alternatives = models.ForeignKey('RouteSegmentGroup', on_delete=models.CASCADE, verbose_name='Alternative Group To', related_name='seg_route_segment_group')
 
 class UserGeneratedContent(models.Model):
-    creator = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE, related_name='created_by')
-    accountable_person = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE)
+    creator = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE, null=True, blank=True, related_name='created_by')
+    accountable_person = models.ForeignKey(PersonAndOrganization, on_delete=models.CASCADE, null=True, blank=True)
     spatial_coverage = models.CharField(max_length=500)
     associated_media = models.CharField(max_length=500)
     route_guide = models.ForeignKey('RouteGuide', on_delete=models.CASCADE, null=True, blank=True, related_name='user_generated_content')
@@ -180,9 +181,9 @@ class RouteGuide(models.Model):
     date_published = models.DateField(blank=True, null=True, auto_now=False, auto_now_add=False, verbose_name='Date Published')
     date_modified = models.DateField(blank=True, null=True, auto_now=False, auto_now_add=False, verbose_name='Date Modified')
     description = models.TextField(blank=True, verbose_name='Description')
-    headline = models.CharField(blank=True, max_length=200, verbose_name='Headline (Brief Description)')
+    headline = models.CharField(blank=True, null=True, max_length=200, verbose_name='Headline (Brief Description)')
     distance = models.CharField(max_length=9, verbose_name='Distance')
-    is_loop = models.BooleanField(verbose_name='Is Loop', default=True)
+    is_loop = models.BooleanField(verbose_name='Is Loop', default=True, blank=True, null=True)
     id_as_url = models.URLField(verbose_name='ID (URL)')
     author = models.ManyToManyField(PersonAndOrganization, verbose_name='Author')
     activity = models.ManyToManyField(Activity, blank=True)
