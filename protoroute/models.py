@@ -185,7 +185,7 @@ class RouteGuide(models.Model):
     distance = models.CharField(max_length=9, verbose_name='Distance')
     is_loop = models.BooleanField(verbose_name='Is Loop', default=True, blank=True, null=True)
     id_as_url = models.URLField(verbose_name='ID (URL)')
-    author = models.ManyToManyField(PersonAndOrganization, blank=True, null=True, verbose_name='Author')
+    author = models.ManyToManyField(PersonAndOrganization, blank=True, verbose_name='Author')
     activity = models.ManyToManyField(Activity, blank=True)
     categories = models.ManyToManyField('Category', verbose_name='Category', related_name="categories", blank=True)
     surfaces = models.ManyToManyField('Surface', verbose_name='Surface', related_name="surfaces", blank=True)
